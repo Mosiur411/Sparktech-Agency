@@ -1,6 +1,3 @@
-
-import { Types } from "mongoose";
-
 export interface IAnalytic {
     course: string;
     views: number;
