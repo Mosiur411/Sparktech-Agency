@@ -4,7 +4,7 @@ export interface ICourse {
   title: string;
   description: string;
   teacher: Types.ObjectId;
-  students: Types.ObjectId[];
-  likes: number;
+  lessons: Types.ObjectId[];
+  likes: { student: Types.ObjectId; message: string }[];
   feedbacks: { student: Types.ObjectId; message: string }[];
   }

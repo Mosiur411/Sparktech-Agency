@@ -4,47 +4,30 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { UserModel } from '../user/user.model'
 
-const register = async (payload: IUser) => {
-  const result = await UserModel.create(payload)
-  if (!result) {
-    throw new CustomError('Failed to create user', 500);
-  }
-  return result
 
-  
-}
 
-const login = async (payload: { gmail: string; password: string }) => {
+const login = async (payload: { email: string; password: string }) => {
  
 
-  if (!payload.gmail || !payload.password) {
-  
-    throw { message: 'Gmail and password are required', statusCode: 400 };
+  if (!payload.email || !payload.password) {
+    throw { message: 'email and password are required', statusCode: 400 };
   }
 
-  const user = await UserModel.findOne({ gmail: payload.gmail }).select('+password');
-
+  const user = await UserModel.findOne({email: payload.email }).select('+password');
 
   if (!user) {
-
     throw new Error('User not found!'); 
-
   }
 
-  if (user.status === 'blocked') {
-  
-    throw new Error('This user is blocked!' );
-  }
 
   const isPasswordMatched = await bcrypt.compare(payload.password, user.password);
 
   if (!isPasswordMatched) {
-  
     throw new Error('Invalid password' );
   }
 
   const jwtPayload = {
-    gmail: user.gmail,
+    email: user.email,
     role: user.role,
     _id: user._id.toString(),
   };
@@ -56,9 +39,6 @@ const login = async (payload: { gmail: string; password: string }) => {
 };
 
 
-
-
 export const AuthService = {
-  register,
   login,
 }

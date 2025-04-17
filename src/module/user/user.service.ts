@@ -1,124 +1,48 @@
 import mongoose from 'mongoose';
-import { IStudentUser } from '../student/student.interface'
 import { UserModel } from './user.model';
 import { IUser } from './user.interface';
-import StudentUserModel from '../student/student.model';
-import { IFacultyUser } from '../faculty/faculty.interface';
-import FacultyUserModel from '../faculty/faculty.model';
-import CanteenstaffUserModel from '../canteenstaff/canteenstaff.model';
+import { USER_ROLE } from './user.constants';
+import StudentModel from '../student/student.model';
+import TeacherModel from '../teacher/teacher.model';
 
 
-const createStudentsIntoDB = async (payload: IStudentUser) => {
-  const userData: Partial<IUser> = {};
-  userData.name = payload.name;
-  userData.status = payload.status;
-  userData.role = 'student';
-  userData.address = payload.address;
-  userData.contact = payload.contact;
-  userData.password = payload.password
-  userData.gmail = payload.gmail;
-
+export const createUserIntoDB = async (payload: IUser & { [key: string]: any }) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
   try {
-    const newUser = await UserModel.create([userData], { session });
-    payload.user = newUser[0]._id;
-    const student = await StudentUserModel.create([payload], { session });
+    // Step 1: Create base user
+    const { role, ...userData } = payload;
+    const newUser = await UserModel.create([{ ...userData, role }], { session });
+    const createdUser = newUser[0];
+
+    // Step 2: Create role-based model (student/teacher)
+    let roleData;
+
+    if (role === "student") {
+      roleData = await StudentModel.create(
+        [{ user: createdUser._id, ...payload.studentData }],
+        { session }
+      );
+    } else if (role === "teacher") {
+      roleData = await TeacherModel.create(
+        [{ user: createdUser._id, ...payload.teacherData }],
+        { session }
+      );
+    } else {
+      throw new Error("Invalid role specified.");
+    }
+
     await session.commitTransaction();
     session.endSession();
-    return { student: student[0] };
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw new Error("Transaction failed: " + error);
-  }
-};
-const createAdminIntoDB = async (payload: IStudentUser) => {
-  const userData: Partial<IUser> = {};
-  userData.name = payload.name;
-  userData.status = payload.status;
-  userData.role = 'admin';
-  userData.address = payload.address;
-  userData.contact = payload.contact;
-  userData.password = payload.password
-  userData.gmail = payload.gmail;
-  const newUser = await UserModel.create(userData);
-  return newUser;
-
-};
-
-const createFacultysIntoDB = async (payload: IFacultyUser) => {
-  const userData: Partial<IUser> = {};
-  userData.name = payload.name;
-  userData.status = payload.status;
-  userData.role = 'faculty';
-  userData.address = payload.address;
-  userData.contact = payload.contact;
-  userData.password = payload.password
-  userData.gmail = payload.gmail;
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const newUser = await UserModel.create([userData], { session });
-    payload.user = newUser[0]._id;
-    const faculty = await FacultyUserModel.create([payload], { session });
-    await session.commitTransaction();
-    session.endSession();
-    return { faculty: faculty[0] };
-  } catch (error) {
-    console.log('error',error)
-    await session.abortTransaction();
-    session.endSession();
-    new Error("Transaction failed: " + error);
-  }
-};
-
-const createGuestsIntoDB = async (payload: IStudentUser) => {
-  const userData: Partial<IUser> = {};
-  userData.name = payload.name;
-  userData.status = payload.status;
-  userData.role = 'student';
-  userData.address = payload.address;
-  userData.contact = payload.contact;
-  userData.password = payload.password
-  userData.gmail = payload.gmail;
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const newUser = await UserModel.create([userData], { session });
-    payload.user = newUser[0]._id;
-    const student = await StudentUserModel.create([payload], { session });
-    await session.commitTransaction();
-    session.endSession();
-    return { student: student[0] };
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw new Error("Transaction failed: " + error);
-  }
-};
-
-const createCanteenStaffsIntoDB = async (payload: IStudentUser) => {
-  const userData: Partial<IUser> = {};
-  userData.name = payload.name;
-  userData.status = payload.status;
-  userData.role = 'canteen_staff';
-  userData.address = payload.address;
-  userData.contact = payload.contact;
-  userData.password = payload.password
-  userData.gmail = payload.gmail;
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const newUser = await UserModel.create([userData], { session });
-    payload.user = newUser[0]._id;
-    const canteenstaff = await CanteenstaffUserModel.create([payload], { session });
-    await session.commitTransaction();
-    session.endSession();
-    return { canteenstaff: canteenstaff[0] };
+    return {
+      success: true,
+      message: `${role} created successfully`,
+      data: {
+        user: createdUser,
+        [role]: roleData[0],
+      },
+    };
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -127,33 +51,59 @@ const createCanteenStaffsIntoDB = async (payload: IStudentUser) => {
 };
 
 
-const getUSers = async () => {
-  const users = await UserModel.find();
-  return users;
-}
+export const getProfile = async (_id: string) => {
 
 
-const deleteUser = async () => {
-  const result = await UserModel.deleteMany();
-  return result;
-}
+  if (!_id) throw new Error('User ID is required to fetch profile.');
 
-const getPofile = async (gmail: string) => {
-  if (!gmail) throw new Error('mobile is required to fetch profile.');
+  const user = await UserModel.findById(_id).select('-password -__v').lean();
+  console.log(user)
 
-  const result = await UserModel.findOne({ gmail }); 
-  if (!result) throw new Error('User not found.');
+  if (!user) throw new Error('User not found.');
 
-  return result;
+  const profile: any = { ...user };
+
+  if (user.role === USER_ROLE.student) {
+    const studentData = await StudentModel.findOne({user: user._id })
+      .select('-__v -createdAt -updatedAt')
+      // .populate([
+      //   { path: 'enrolledCourses', select: 'title description' },
+      //   { path: 'followedTeachers', select: 'user' },
+      //   { path: 'progress.course', select: 'title' },
+      //   { path: 'progress.lesson', select: 'title' },
+      //   { path: 'progress.completedTopics', select: 'title' }
+      // ])
+      .lean();
+
+    if (studentData) {
+      profile.studentInfo = studentData;
+    }
+  }
+
+  if (user.role === USER_ROLE.teacher) {
+    const teacherData = await TeacherModel.findOne({user: user._id })
+      .select('-__v -createdAt -updatedAt')
+      // .populate([
+      //   { path: 'courses', select: 'title description' },
+      //   { path: 'followers', select: 'user' },
+      //   { path: 'analytics.course', select: 'title' }
+      // ])
+      .lean();
+
+    if (teacherData) {
+      profile.teacherInfo = teacherData;
+    }
+  }
+
+  return profile;
 };
+
+
+
+
+
 
 export const userService = {
-  createStudentsIntoDB,
-  getUSers,
-  deleteUser,
-  getPofile,
-  createFacultysIntoDB,
-  createGuestsIntoDB,
-  createCanteenStaffsIntoDB,
-  createAdminIntoDB
+  createUserIntoDB,
+  getProfile
 }

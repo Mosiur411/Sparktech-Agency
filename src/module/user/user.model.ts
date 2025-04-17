@@ -6,12 +6,23 @@ import config from "../../config";
 
 const UserSchema = new Schema<IUser>({
  
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['student', 'teacher'], required: true },
-  followedTeachers: [{ type: Schema.Types.ObjectId, ref: 'User' }]
-
+  name: { 
+    type: String, required: true
+   },
+   email: { 
+    type: String,
+     required: true, 
+     unique: true 
+    },
+  password: { 
+    type: String,
+     required: true 
+    },
+  role: { 
+    type: String, 
+    enum: ['student', 'teacher'], 
+    required: true 
+  },
 
 
 },{timestamps: true});
