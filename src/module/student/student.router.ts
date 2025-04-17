@@ -5,6 +5,7 @@ import { StudentController } from './student.controller';
 const studentRouter = express.Router();
 
 studentRouter.post('/enrolled-courses', auth.authUser('student'), StudentController.enrolledCoursesStudent);
+studentRouter.get('/courses', auth.authUser('student'), StudentController.getenrolledCoursesStudentIntoDb);
 
 
 

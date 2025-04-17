@@ -14,12 +14,21 @@ const enrolledCoursesStudent  = catchAsync(async(req, res) => {
         data: result,
     });
 });
+const getenrolledCoursesStudentIntoDb  = catchAsync(async(req, res) => {
+    const user =req.user
+    const result = await studentService.getenrolledCoursesStudentIntoDb({studentId:user?._id});
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
+        message: 'Enrolled Course Created successfully',
+        data: result,
+    });
+});
 
 
 
 
 export const StudentController = {
     enrolledCoursesStudent,
+    getenrolledCoursesStudentIntoDb
    
- 
 }

@@ -5,7 +5,7 @@ const LessonSchema = new Schema<ILesson>({
     title: { type: String, required: true },
     teacher: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     description: { type: String },
-    topics: [{ type: Schema.Types.ObjectId, ref: 'Topic' }],
+    topics: [{ type: Schema.Types.ObjectId, ref: 'Topics' }],
 });
 
 export const LessonModel = mongoose.model<ILesson>("Lesson", LessonSchema)

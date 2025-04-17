@@ -1,7 +1,7 @@
 import { CourseModel } from "../course/course.model";
 import StudentModel from "./student.model";
 
-const enrolledCoursesStudentIntoDb = async (payload:any) => {
+const enrolledCoursesStudentIntoDb = async (payload: any) => {
     const { studentId, courseId } = payload;
 
     const course = await CourseModel.findById(courseId);
@@ -16,12 +16,42 @@ const enrolledCoursesStudentIntoDb = async (payload:any) => {
     // Now update student document
     const student = await StudentModel.findOne({ user: studentId });
     if (!student) throw new Error("Student not found.");
-  
+
     const isAlreadyInStudent = student.enrolledCourses.includes(courseId);
     if (!isAlreadyInStudent) {
-      student.enrolledCourses.push(courseId);
-      await student.save();
+        student.enrolledCourses.push(courseId);
+        await student.save();
     }
+    return student;
+
+}
+const getenrolledCoursesStudentIntoDb = async (payload: any) => {
+    const { studentId } = payload;
+    
+    const student = await StudentModel.findOne({ user: studentId }).populate({
+        path: "enrolledCourses",
+        select: "-enrolledStudents", // ⛔ Exclude the field here
+        populate: [
+          {
+            path: "teacher",
+            select: "name email"
+          },
+          {
+            path: "lessons",
+            populate: {
+              path: "topics",
+              select: "title content quiz"
+            },
+            select: "title description topics"
+          }
+        ]
+      });
+
+
+    if (!student) {
+        throw new Error("Student not found.");
+    }
+
     return student;
 
 }
@@ -29,5 +59,6 @@ const enrolledCoursesStudentIntoDb = async (payload:any) => {
 
 
 export const studentService = {
-    enrolledCoursesStudentIntoDb
+    enrolledCoursesStudentIntoDb,
+    getenrolledCoursesStudentIntoDb
 }
