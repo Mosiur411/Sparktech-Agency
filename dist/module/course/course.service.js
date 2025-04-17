@@ -30,7 +30,7 @@ const getAllCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, functi
         : {};
     const teacherFilter = _id ? { teacher: _id } : {};
     const finalFilter = Object.assign(Object.assign({}, searchFilter), teacherFilter);
-    const topics = yield course_model_1.CourseModel.find(finalFilter)
+    const course = yield course_model_1.CourseModel.find(finalFilter)
         .skip(skip)
         .limit(Number(limit))
         .lean();
@@ -41,20 +41,20 @@ const getAllCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, functi
             limit: Number(limit),
             total
         },
-        data: topics
+        data: course
     };
 });
 const getSingleCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id, userId } = payload;
-    const topics = yield course_model_1.CourseModel.find({ _id: _id, teacher: userId })
+    const course = yield course_model_1.CourseModel.find({ _id: _id, teacher: userId })
         .lean();
-    return topics;
+    return course;
 });
 const deleteCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id, userId } = payload;
-    const topics = yield course_model_1.CourseModel.deleteOne({ _id: _id, teacher: userId })
+    const course = yield course_model_1.CourseModel.deleteOne({ _id: _id, teacher: userId })
         .lean();
-    return topics;
+    return course;
 });
 const updateCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id: userId, data, paramsId: topicId } = payload;
@@ -80,10 +80,52 @@ const updateCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, functi
     }
     return updatedTopic;
 });
+const feedbackCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: userId, data, courseId } = payload;
+    if (!courseId || !mongoose_1.Types.ObjectId.isValid(courseId)) {
+        throw new Error("A valid course ID is required for update.");
+    }
+    // Optionally check course exists and belongs to user
+    const course = yield course_model_1.CourseModel.findById(courseId);
+    if (!course)
+        throw new Error("course not found.");
+    // Merge teacher and update fields
+    const updatedcourse = yield course_model_1.CourseModel.findByIdAndUpdate(courseId, {
+        $push: {
+            feedbacks: Object.assign({ student: userId }, data)
+        }
+    });
+    if (!updatedcourse) {
+        throw new Error("course update failed.");
+    }
+    return updatedcourse;
+});
+const likeCourseIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: userId, courseId } = payload;
+    if (!courseId || !mongoose_1.Types.ObjectId.isValid(courseId)) {
+        throw new Error("A valid course ID is required for update.");
+    }
+    const course = yield course_model_1.CourseModel.findById(courseId);
+    if (!course)
+        throw new Error("Course not found.");
+    // Check if the user already liked the course
+    const alreadyLiked = course.likes.some((likeId) => likeId.toString() === userId.toString());
+    if (alreadyLiked) {
+        throw new Error("You have already liked this course.");
+    }
+    // Push like if not already liked
+    const updatedCourse = yield course_model_1.CourseModel.findByIdAndUpdate(courseId, { $push: { likes: userId } }, { new: true });
+    if (!updatedCourse) {
+        throw new Error("Course update failed.");
+    }
+    return updatedCourse;
+});
 exports.courseService = {
     createCourseIntoDb,
     getAllCourseIntoDb,
     getSingleCourseIntoDb,
     deleteCourseIntoDb,
     updateCourseIntoDb,
+    feedbackCourseIntoDb,
+    likeCourseIntoDb
 };

@@ -68,10 +68,33 @@ const updateCourse = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
         data: result,
     });
 }));
+const feedbackCourse = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const data = req.body;
+    const paramsid = req.params.id;
+    const result = yield course_service_1.courseService.feedbackCourseIntoDb({ data: data, _id: user === null || user === void 0 ? void 0 : user._id, courseId: paramsid });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: 'Course Update successfully',
+        data: result,
+    });
+}));
+const likeCourse = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const paramsid = req.params.id;
+    const result = yield course_service_1.courseService.likeCourseIntoDb({ _id: user === null || user === void 0 ? void 0 : user._id, courseId: paramsid });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: 'Course Update successfully',
+        data: result,
+    });
+}));
 exports.courseController = {
     createCourse,
     getCourse,
     getsingleCourse,
     updateCourse,
     deleteCourse,
+    feedbackCourse,
+    likeCourse,
 };

@@ -16,7 +16,13 @@ const updateCourseSchema = zod_1.z.object({
         lessons: zod_1.z.array(zod_1.z.string()).optional()
     })
 });
+const feedbacksCourseSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        message: zod_1.z.string(),
+    })
+});
 exports.courseValidation = {
     createCourseSchema,
     updateCourseSchema,
+    feedbacksCourseSchema,
 };

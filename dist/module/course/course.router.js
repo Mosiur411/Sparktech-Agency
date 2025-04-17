@@ -14,4 +14,6 @@ courseRouter.get('/', auth_1.auth.authUser('teacher'), course_controller_1.cours
 courseRouter.get('/:id', auth_1.auth.authUser('teacher'), course_controller_1.courseController.getsingleCourse);
 courseRouter.patch('/:id', auth_1.auth.authUser('teacher'), course_controller_1.courseController.updateCourse);
 courseRouter.delete('/:id', auth_1.auth.authUser('teacher'), course_controller_1.courseController.deleteCourse);
+courseRouter.post('/feedback/:id', auth_1.auth.authUser('student', 'teacher'), (0, validateRequest_1.default)(course_validation_1.courseValidation.feedbacksCourseSchema), course_controller_1.courseController.feedbackCourse);
+courseRouter.post('/like/:id', auth_1.auth.authUser('student', 'teacher'), course_controller_1.courseController.likeCourse);
 exports.default = courseRouter;

@@ -40,6 +40,7 @@ const CourseSchema = new mongoose_1.Schema({
     description: { type: String },
     teacher: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     lessons: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Lesson' }],
+    enrolledStudents: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'User' }],
     likes: {
         type: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'User' }],
         default: []
