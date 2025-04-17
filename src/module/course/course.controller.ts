@@ -62,6 +62,29 @@ const updateCourse = catchAsync(async (req, res) => {
     })
 
 });
+const feedbackCourse = catchAsync(async (req, res) => {
+    const user = req.user;
+    const data = req.body;
+    const paramsid = req.params.id;
+    const result = await courseService.feedbackCourseIntoDb({ data: data, _id: user?._id, courseId:paramsid });
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        message: 'Course Update successfully',
+        data: result,
+    })
+
+});
+const likeCourse = catchAsync(async (req, res) => {
+    const user = req.user;
+    const paramsid = req.params.id;
+    const result = await courseService.likeCourseIntoDb({_id: user?._id, courseId:paramsid });
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        message: 'Course Update successfully',
+        data: result,
+    })
+
+});
 
 
 export const courseController = {
@@ -70,5 +93,7 @@ export const courseController = {
     getsingleCourse,
     updateCourse,
     deleteCourse,
+    feedbackCourse,
+    likeCourse,
  
 }

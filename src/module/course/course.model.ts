@@ -6,6 +6,7 @@ const CourseSchema = new Schema<ICourse>({
   description: { type: String },
   teacher: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson' }],
+  enrolledStudents: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   likes: {
     type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     default: []

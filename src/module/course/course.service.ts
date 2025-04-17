@@ -7,16 +7,16 @@ interface IUpdateCoursePayload {
     paramsId: string,
     data: {
         title?: string;
-         description?: string;
-         lessons?: Types.ObjectId[];
-         likes?: { student: Types.ObjectId; message: string }[];
-         feedbacks?: { student: Types.ObjectId; message: string }[];
+        description?: string;
+        lessons?: Types.ObjectId[];
+        likes?: { student: Types.ObjectId; message: string }[];
+        feedbacks?: { student: Types.ObjectId; message: string }[];
     };
 }
 
 
 
-const createCourseIntoDb = async(payload:ICourse) => {
+const createCourseIntoDb = async (payload: ICourse) => {
     const result = await CourseModel.create(payload);
     return result;
 }
@@ -42,7 +42,7 @@ const getAllCourseIntoDb = async (payload: any) => {
         ...teacherFilter
     };
 
-    const topics = await CourseModel.find(finalFilter)
+    const course = await CourseModel.find(finalFilter)
         .skip(skip)
         .limit(Number(limit))
         .lean();
@@ -55,26 +55,26 @@ const getAllCourseIntoDb = async (payload: any) => {
             limit: Number(limit),
             total
         },
-        data: topics
+        data: course
     };
 };
 const getSingleCourseIntoDb = async (payload: any) => {
     const { _id, userId } = payload;
-   
-    const topics = await CourseModel.find({_id:_id, teacher:userId})
+
+    const course = await CourseModel.find({ _id: _id, teacher: userId })
         .lean();
 
-    return topics; 
- 
+    return course;
+
 };
 const deleteCourseIntoDb = async (payload: any) => {
     const { _id, userId } = payload;
-   
-    const topics = await CourseModel.deleteOne({_id:_id, teacher:userId})
+
+    const course = await CourseModel.deleteOne({ _id: _id, teacher: userId })
         .lean();
 
-    return topics; 
- 
+    return course;
+
 };
 
 const updateCourseIntoDb = async (payload: IUpdateCoursePayload) => {
@@ -113,6 +113,72 @@ const updateCourseIntoDb = async (payload: IUpdateCoursePayload) => {
     return updatedTopic;
 };
 
+const feedbackCourseIntoDb = async (payload: any) => {
+    const { _id: userId,data,courseId } = payload;
+
+    if (!courseId || !Types.ObjectId.isValid(courseId)) {
+        throw new Error("A valid course ID is required for update.");
+    }
+
+    // Optionally check course exists and belongs to user
+    const course = await CourseModel.findById(courseId);
+    if (!course) throw new Error("course not found.");
+
+
+    // Merge teacher and update fields
+    const updatedcourse = await CourseModel.findByIdAndUpdate(courseId, {
+        $push: {
+            feedbacks: {
+                student: userId,
+                ...data
+            }
+        }
+
+    });
+
+    if (!updatedcourse) {
+        throw new Error("course update failed.");
+    }
+
+    return updatedcourse;
+};
+
+
+
+const likeCourseIntoDb = async (payload: any) => {
+    const { _id: userId, courseId } = payload;
+  
+    if (!courseId || !Types.ObjectId.isValid(courseId)) {
+      throw new Error("A valid course ID is required for update.");
+    }
+  
+    const course = await CourseModel.findById(courseId);
+    if (!course) throw new Error("Course not found.");
+  
+    // Check if the user already liked the course
+    const alreadyLiked = course.likes.some(
+      (likeId: any) => likeId.toString() === userId.toString()
+    );
+  
+    if (alreadyLiked) {
+      throw new Error("You have already liked this course.");
+    }
+  
+    // Push like if not already liked
+    const updatedCourse = await CourseModel.findByIdAndUpdate(
+      courseId,
+      { $push: { likes: userId } },
+      { new: true }
+    );
+  
+    if (!updatedCourse) {
+      throw new Error("Course update failed.");
+    }
+  
+    return updatedCourse;
+  };
+
+
 
 export const courseService = {
     createCourseIntoDb,
@@ -120,4 +186,6 @@ export const courseService = {
     getSingleCourseIntoDb,
     deleteCourseIntoDb,
     updateCourseIntoDb,
+    feedbackCourseIntoDb,
+    likeCourseIntoDb
 }

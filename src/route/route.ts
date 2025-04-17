@@ -4,6 +4,7 @@ import userRouter from "../module/user/user.router";
 import courseRouter from "../module/course/course.router";
 import topicRouter from "../module/topic/topic.router";
 import lessonRouter from "../module/lesson/lesson.router";
+import studentRouter from "../module/student/student.router";
 
 const router = Router();
 const moduleRoutes = [
@@ -26,6 +27,10 @@ const moduleRoutes = [
     {
         path: '/topic',
         route: topicRouter,
+    },
+    {
+        path: '/student',
+        route: studentRouter,
     },
 
 ];

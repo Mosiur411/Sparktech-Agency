@@ -15,7 +15,16 @@ const updateCourseSchema = z.object({
     lessons: z.array(z.string()).optional()
   })
 });
+const feedbacksCourseSchema = z.object({
+  body: z.object({
+    message: z.string(),
+  })
+});
+
+
+
 export const courseValidation = {
   createCourseSchema,
   updateCourseSchema,
+  feedbacksCourseSchema,
 }

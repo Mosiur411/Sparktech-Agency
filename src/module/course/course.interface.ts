@@ -5,6 +5,7 @@ export interface ICourse {
   description: string;
   teacher: Types.ObjectId;
   lessons: Types.ObjectId[];
+  enrolledStudents: Types.ObjectId[];
   likes: { student: Types.ObjectId; message: string }[];
   feedbacks: { student: Types.ObjectId; message: string }[];
   }

@@ -13,6 +13,11 @@ courseRouter.get('/:id', auth.authUser('teacher'),  courseController.getsingleCo
 courseRouter.patch('/:id', auth.authUser('teacher'),  courseController.updateCourse);
 courseRouter.delete('/:id', auth.authUser('teacher'),  courseController.deleteCourse);
 
+courseRouter.post('/feedback/:id', auth.authUser('student','teacher'), validateRequest(courseValidation.feedbacksCourseSchema), courseController.feedbackCourse);
+
+courseRouter.post('/like/:id', auth.authUser('student','teacher'),  courseController.likeCourse);
+
+
 
 
 export default courseRouter;
